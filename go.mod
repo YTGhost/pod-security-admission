@@ -1,6 +1,6 @@
 // This is a generated file. Do not edit directly.
 
-module k8s.io/pod-security-admission
+module github.com/YTGhost/pod-security-admission
 
 go 1.19
 

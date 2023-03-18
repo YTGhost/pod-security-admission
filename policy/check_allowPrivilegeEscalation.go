@@ -63,13 +63,58 @@ func CheckAllowPrivilegeEscalation() Check {
 
 func allowPrivilegeEscalation_1_8(podMetadata *metav1.ObjectMeta, podSpec *corev1.PodSpec) CheckResult {
 	var badContainers []string
+	var badInitContainers []string
+	var badEphemeralContainers []string
 	visitContainers(podSpec, func(container *corev1.Container) {
 		if container.SecurityContext == nil || container.SecurityContext.AllowPrivilegeEscalation == nil || *container.SecurityContext.AllowPrivilegeEscalation {
 			badContainers = append(badContainers, container.Name)
 		}
 	})
 
-	if len(badContainers) > 0 {
+	visitInitContainers(podSpec, func(container *corev1.Container) {
+		if container.SecurityContext == nil || container.SecurityContext.AllowPrivilegeEscalation == nil || *container.SecurityContext.AllowPrivilegeEscalation {
+			badInitContainers = append(badInitContainers, container.Name)
+		}
+	})
+
+	visitEphemeralContainers(podSpec, func(container *corev1.Container) {
+		if container.SecurityContext == nil || container.SecurityContext.AllowPrivilegeEscalation == nil || *container.SecurityContext.AllowPrivilegeEscalation {
+			badEphemeralContainers = append(badEphemeralContainers, container.Name)
+		}
+	})
+
+	if len(badContainers) > 0 || len(badInitContainers) > 0 || len(badEphemeralContainers) > 0 {
+		var restrictedFields []RestrictedField
+		for _, badContainer := range badContainers {
+			restrictedFields = append(restrictedFields, RestrictedField{
+				Path:          "spec.containers[*].securityContext.allowPrivilegeEscalation",
+				ContainerName: badContainer,
+				ForbiddenValues: []interface{}{
+					true,
+				},
+			})
+		}
+
+		for _, badInitContainer := range badInitContainers {
+			restrictedFields = append(restrictedFields, RestrictedField{
+				Path:          "spec.initContainers[*].securityContext.allowPrivilegeEscalation",
+				ContainerName: badInitContainer,
+				ForbiddenValues: []interface{}{
+					true,
+				},
+			})
+		}
+
+		for _, badEphemeralContainer := range badEphemeralContainers {
+			restrictedFields = append(restrictedFields, RestrictedField{
+				Path:          "spec.ephemeralContainers[*].securityContext.allowPrivilegeEscalation",
+				ContainerName: badEphemeralContainer,
+				ForbiddenValues: []interface{}{
+					true,
+				},
+			})
+		}
+
 		return CheckResult{
 			Allowed:         false,
 			ForbiddenReason: "allowPrivilegeEscalation != false",
@@ -78,6 +123,7 @@ func allowPrivilegeEscalation_1_8(podMetadata *metav1.ObjectMeta, podSpec *corev
 				pluralize("container", "containers", len(badContainers)),
 				joinQuote(badContainers),
 			),
+			RestrictedFields: restrictedFields,
 		}
 	}
 	return CheckResult{Allowed: true}

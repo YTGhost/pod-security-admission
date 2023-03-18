@@ -80,6 +80,17 @@ type CheckResult struct {
 	// - list specific invalid containers: "container1, container2"
 	// - list specific non-default capabilities: "CAP_NET_RAW"
 	ForbiddenDetail string
+
+	RestrictedFields []RestrictedField
+}
+
+type RestrictedField struct {
+	// Path is the restricted field path
+	Path string
+	// ContainerName is invalid container
+	ContainerName string
+	// ForbiddenValues are values that not allowed
+	ForbiddenValues []interface{}
 }
 
 // AggergateCheckResult holds the aggregate result of running CheckPod across multiple checks.

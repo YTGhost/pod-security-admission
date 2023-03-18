@@ -25,12 +25,18 @@ type ContainerVisitor func(container *corev1.Container)
 
 // visitContainers invokes the visitor function for every container in the given pod spec
 func visitContainers(podSpec *corev1.PodSpec, visitor ContainerVisitor) {
-	for i := range podSpec.InitContainers {
-		visitor(&podSpec.InitContainers[i])
-	}
 	for i := range podSpec.Containers {
 		visitor(&podSpec.Containers[i])
 	}
+}
+
+func visitInitContainers(podSpec *corev1.PodSpec, visitor ContainerVisitor) {
+	for i := range podSpec.InitContainers {
+		visitor(&podSpec.InitContainers[i])
+	}
+}
+
+func visitEphemeralContainers(podSpec *corev1.PodSpec, visitor ContainerVisitor) {
 	for i := range podSpec.EphemeralContainers {
 		visitor((*corev1.Container)(&podSpec.EphemeralContainers[i].EphemeralContainerCommon))
 	}
