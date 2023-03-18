@@ -3,3 +3,4 @@ pod-security-webhook
 
 # Directory containing pki files
 pki/
+.idea
