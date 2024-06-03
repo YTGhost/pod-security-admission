@@ -18,9 +18,10 @@ package policy
 
 import (
 	"fmt"
-	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sort"
 	"strings"
+
+	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -153,6 +154,7 @@ func appArmorProfileV1Dot0(podMetadata *metav1.ObjectMeta, podSpec *corev1.PodSp
 				strings.Join(badSetters.Data(), " and "),
 				joinQuote(badValueList),
 			),
+			ErrList: badSetters.Errs(),
 		}
 	}
 
